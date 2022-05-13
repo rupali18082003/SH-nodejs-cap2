@@ -1,8 +1,10 @@
 const db = require('../config/db.config.js')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const  validate  = require('../validation/user.validation.js')
+const { getToken } = require('../middleware/get-jwt-token.js')
 
-class Signup {
+class User {
 	constructor(first_name, last_name, email, password, phone, address, is_admin) {
 		this.first_name = first_name 
 		this.last_name = last_name
@@ -14,7 +16,9 @@ class Signup {
 	}
 
 	//signing up
-	static create (newUser, result) {
+	static signup (newUser, result) {
+		const isValid = validate (newUser.first_name, newUser.last_name, newUser.email, newUser.password, newUser.phone, newUser.address, newUser.is_admin)
+		if(isValid === 1){
 		db.query('SELECT * FROM users WHERE email = ?', [newUser.email], (err, res) => {
 			console.log('RES: ', res)
 			if(res.length) {
@@ -58,17 +62,14 @@ class Signup {
 			}
 
 		 })		
-	}
-}
-
-class Signin {
-	constructor(email, password) {
-		this.email = email
-		this.password = password
+		} else {
+			result(isValid, null)
+		}
 	}
 
-	static signin(user, result) {
-		db.query('SELECT * FROM users WHERE email = ?', [user.email], (err, res) => {
+	//signing in
+	static signin ({ email, password }, result) {
+		db.query('SELECT * FROM users WHERE email = ?', [email], (err, res) => {
 			if(err) {
 				throw err
 				result({
@@ -83,7 +84,7 @@ class Signin {
 					message: "Invalid email or password."
 				}, null)
 			} else {
-				bcrypt.compare(user.password, res[0].password, (err, data) => {
+				bcrypt.compare(password, res[0].password, (err, data) => {
 					if (err) {
 						throw err
 						result({
@@ -93,12 +94,12 @@ class Signin {
 					}
 
 					if (data) {
-						//generating authentication token for 24 Hours
-						const token = jwt.sign({ id: res[0].id }, process.env.JWT_SECRET_KEY, {expiresIn: '24h'})
+						const token = getToken( res[0].id )
 
 						result(null, {
 							status: "success",
-							user,
+							email,
+							password,
 							token
 						})
 					} else {
@@ -110,12 +111,12 @@ class Signin {
 				})
 			}
 		})
+	}
 
+	//find user by email
+	static findByEmail (id) {
+		db.query('SELECT * FROM users WHERE user_id = ?', [id])
 	}
 }
 
-
-module.exports = {
-	Signup,
-	Signin
-}
+module.exports = User
