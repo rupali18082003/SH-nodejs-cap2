@@ -1,6 +1,5 @@
 const router = require('express').Router()
 const userController = require('../controllers/user.controller.js')
-const { auth } = require('../middleware/user.auth.js')
 
 module.exports = app => {
 	//register new user
