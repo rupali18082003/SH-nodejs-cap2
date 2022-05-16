@@ -49,12 +49,16 @@ class User {
 							return
 						}
 
-						console.log('User created: ', {...newUser})
+						const token = getToken( res.insertId )
+
 						result(null, { 
 							status: "success",
 							data: {
 								id: res.insertId, 
-								...newUser
+								token,
+								first_name: newUser.first_name,
+								last_name: newUser.last_name,
+								email: newUser.email
 							}
 						})
 					})
@@ -94,14 +98,24 @@ class User {
 					}
 
 					if (data) {
-						const token = getToken( res[0].id )
+						const token = getToken( res[0].user_id )
 
-						result(null, {
-							status: "success",
-							email,
-							password,
-							token
+						db.query('SELECT * FROM users WHERE user_id = ?', res[0].user_id, (err, user) => {
+							if(err) throw err
+
+							result(null, {
+								status: "success",
+								data: {
+									token, 
+									id: user[0].user_id,
+									first_name: user[0].first_name,
+									last_name: user[0].last_name,
+									email: user[0].email
+								}
+							})
+
 						})
+
 					} else {
 						result({
 							status: "error",
@@ -114,8 +128,10 @@ class User {
 	}
 
 	//find user by email
-	static findByEmail (id) {
-		db.query('SELECT * FROM users WHERE user_id = ?', [id])
+	static findById (id) {
+		 db.query('SELECT * FROM users WHERE user_id = ?', [id], (err, res) => {
+		 	if(err) throw err
+		 })
 	}
 }
 

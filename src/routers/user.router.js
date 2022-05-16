@@ -8,5 +8,5 @@ module.exports = app => {
 	//signing in user
 	router.post('/signin', userController.signin)
 
-	app.use('/api/user', router)
+	app.use('/auth', router)
 }

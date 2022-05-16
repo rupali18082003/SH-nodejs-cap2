@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken')
 const User  = require('../models/user.model.js')
-const query = require('../query/user.query.js')
 
 const auth = async (req, res, next) => {
 		try{
@@ -8,7 +7,7 @@ const auth = async (req, res, next) => {
 
 			const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY, { expiresIn: '24H'})
 
-			const user = await User.findByEmail(decoded.id)
+			const user = await User.findById(decoded.id)
 
 			req.token = token
 			req.user = user
