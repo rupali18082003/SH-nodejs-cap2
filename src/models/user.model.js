@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const  validate  = require('../validation/user.validation.js')
 const { getToken } = require('../middleware/get-jwt-token.js')
+const { findUserById, findUserByEmail, createNewUser } = require('../database/queries.js')
 
 class User {
 	constructor(first_name, last_name, email, password, phone, address, is_admin) {
@@ -17,10 +18,7 @@ class User {
 
 	//signing up
 	static signup (newUser, result) {
-		const isValid = validate (newUser.first_name, newUser.last_name, newUser.email, newUser.password, newUser.phone, newUser.address, newUser.is_admin)
-		if(isValid === 1){
-		db.query('SELECT * FROM users WHERE email = ?', [newUser.email], (err, res) => {
-			console.log('RES: ', res)
+		db.query(findUserByEmail, [newUser.email], (err, res) => {
 			if(res.length) {
 				result({
 					status: "error",
@@ -39,14 +37,12 @@ class User {
 				 		}, null)
 				 	}
 
-				 	db.query('INSERT INTO users(first_name, last_name, email, password, phone, address, is_admin) VALUES(?, ?, ?, ?, ?, ?, ?)', [newUser.first_name, newUser.last_name, newUser.email, hash, newUser.phone, newUser.address, newUser.is_admin], (err, res) => {
+				 	db.query(createNewUser, [newUser.first_name, newUser.last_name, newUser.email, hash, newUser.phone, newUser.address, newUser.is_admin], (err, res) => {
 						if(err) {
-							throw err
 							result({
 								status: "error",
 								message: 'something went wrong, can not register user.'
 							}, null)
-							return
 						}
 
 						const token = getToken( res.insertId )
@@ -66,14 +62,11 @@ class User {
 			}
 
 		 })		
-		} else {
-			result(isValid, null)
-		}
 	}
 
 	//signing in
 	static signin ({ email, password }, result) {
-		db.query('SELECT * FROM users WHERE email = ?', [email], (err, res) => {
+		db.query(findUserByEmail, [email], (err, res) => {
 			if(err) {
 				throw err
 				result({
@@ -100,7 +93,7 @@ class User {
 					if (data) {
 						const token = getToken( res[0].user_id )
 
-						db.query('SELECT * FROM users WHERE user_id = ?', res[0].user_id, (err, user) => {
+						db.query(findUserById, res[0].user_id, (err, user) => {
 							if(err) throw err
 
 							result(null, {
@@ -125,13 +118,6 @@ class User {
 				})
 			}
 		})
-	}
-
-	//find user by email
-	static findById (id) {
-		 db.query('SELECT * FROM users WHERE user_id = ?', [id], (err, res) => {
-		 	if(err) throw err
-		 })
 	}
 }
 

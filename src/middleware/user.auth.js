@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken')
-const User  = require('../models/user.model.js')
+const { findUserById } = require('../database/queries.js')
+const db = require('../config/db.config.js')
+
 
 const auth = async (req, res, next) => {
 		try{
@@ -7,11 +9,12 @@ const auth = async (req, res, next) => {
 
 			const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY, { expiresIn: '24H'})
 
-			const user = await User.findById(decoded.id)
+			db.query(findUserById, decoded.id, (err, user) => {
+				req.token = token
+				req.user = user
+				next()
+			})
 
-			req.token = token
-			req.user = user
-			return next()
 		} catch (err) {
 			res.status(400).send({
 				status: 'error',

@@ -1,181 +1,198 @@
 const db = require('../config/db.config.js')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const {
+    createNewProp,
+    findPropById,
+    updatePropById,
+    updatePropByStatus,
+    deletePropById,
+    viewAll,
+    findByType
+} = require('../database/queries.js')
+
 
 class Property {
-	constructor (user_id, item, status, price, state, city, address, image_url, type, created_on) {
-		this.item = item
-		this.status = status
-		this.price = price
-		this.state = state
-		this.city = city
-		this.address = address
-		this.image_url = image_url
-		this.type = type
-		this.user_id = user_id
-		this.created_on = created_on
-	}
+    constructor(user_id, item, status, price, state, city, address, image_url, type, created_on) {
+        this.item = item
+        this.status = status
+        this.price = price
+        this.state = state
+        this.city = city
+        this.address = address
+        this.image_url = image_url
+        this.type = type
+        this.user_id = user_id
+        this.created_on = created_on
+    }
 
-	static create (newProp, result) {
-		db.query('INSERT INTO properties(user_id, item, status, price, state, city, address, image_url, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [ 
-							newProp.user_id,
-							newProp.item, 
-							newProp.status, 
-							newProp.price, 
-							newProp.state, 
-							newProp.city, 
-							newProp.address, 
-							newProp.image_url, 
-							newProp.type,
-							], (err, res) => {
-			if(err) result({
-				status: 'error',
-				message: err.message
-			}, null)
+    static create(newProp, result) {
+        db.query(createNewProp, [
+            newProp.user_id,
+            newProp.item,
+            newProp.status,
+            newProp.price,
+            newProp.state,
+            newProp.city,
+            newProp.address,
+            newProp.image_url,
+            newProp.type,
+        ], (err, res) => {
+            if (err) result({
+                status: 'error',
+                message: err.message
+            }, null)
 
-			db.query('SELECT * FROM properties WHERE property_id = ?', [res.insertId], (err, data) => {
-				console.log(res.insertId)
-				result(null, {
-					status: 'sucess',
-					data
-				})
-			})
+            db.query(findPropById, [res.insertId], (err, data) => {
+                console.log(res.insertId)
+                result(null, {
+                    status: 'sucess',
+                    data
+                })
+            })
 
-		})
-	}
+        })
+    }
 
-	static update (id, item, status, price, state, city, address, image_url, type, result) {
-		if(item) {
-			db.query('UPDATE properties SET item = ? WHERE property_id = ?', [item, id])
-		}  
+    static update(id, item, status, price, type, result) {
+        db.query(updatePropById, [item, status, price, type, id], (err, res) => {
+            if (err) result({
+                status: 'error',
+                message: err.message
+            }, null)
 
-		if (status) {
-			db.query('UPDATE properties SET status = ? WHERE property_id = ?', [status, id])
-		}  
+            db.query(findPropById, [id], (err, data) => {
+                if (err) result({
+                    status: 'error',
+                    message: err.message
+                }, null)
 
-		if (price) {
-			db.query('UPDATE properties SET price = ? WHERE property_id = ?', [price, id])
-		}  
+                if (!data.length)
+                    result({
+                        status: 'error',
+                        message: 'property not found'
+                    }, null)
 
-		if (state) {
-			db.query('UPDATE properties SET state = ? WHERE property_id = ?', [state, id])
-		}  
+                result(null, {
+                    status: 'sucess',
+                    data
+                })
+            })
+        })
+    }
 
-		if (city) {
-			db.query('UPDATE properties SET city = ? WHERE property_id = ?', [city, id])
-		}  
+    static updateStatus(id, status, result) {
+        db.query(updatePropByStatus, [status, id], (err, res) => {
+            if (err) result({
+                status: 'error',
+                message: err.message
+            }, null)
 
-		if (address) {
-			db.query('UPDATE properties SET address = ? WHERE property_id = ?', [address, id])
-		}  
+            db.query(findPropById, [id], (err, data) => {
+                if (err) result({
+                    status: 'error',
+                    message: err.message
+                }, null)
 
-		if (image_url) {
-			db.query('UPDATE properties SET image_url = ? WHERE property_id = ?', [image_url, id])
-		}  
+                if (!data.length)
+                    result({
+                        status: 'error',
+                        message: 'property not found'
+                    }, null)
 
-		if (type) {
-			db.query('UPDATE properties SET type = ? WHERE property_id = ?', [type, id])
+                result(null, {
+                    status: 'success',
+                    data
+                })
 
-		} 
+            })
+        })
+    }
 
-		db.query('SELECT * FROM properties WHERE property_id = ?', [id], (err, data) => {
-			if(err) result({
-				status: 'error',
-				message: err.message
-			}, null)
+    static delete(id, result) {
+        db.query(findPropById, [id], (err, data) => {
+            if (err) result({
+                status: 'error',
+                message: err.message
+            }, null)
 
-			result(null, {
-				status: 'sucess',
-				data
-			})
-		})
-	}
+            if (!data.length)
+                result({
+                    status: 'error',
+                    message: 'property not found'
+                }, null)
 
-	static delete(id, result) {
-		db.query('SELECT * FROM properties WHERE property_id = ?', [id], (err, data) => {
-			if(err) result({
-				status: 'error', 
-				message: err.message
-			}, null)
+            db.query(deletePropById, [id], (err, res) => {
+                if (err) result({
+                    status: 'error',
+                    message: err.message
+                }, null)
 
-			if(!data.length)
-				result({
-					status: 'error',
-					message: 'property not found'
-				}, null)
 
-			db.query('DELETE FROM properties WHERE property_id = ?', [id], (err, res) => {
-				if(err) result({
-					status: 'error',
-					message: err.message
-				}, null)
+                result(null, {
+                    status: 'success',
+                    data
+                })
+            })
+        })
+    }
 
-				console.log("response: ", res)
+    static findById(id, result) {
+        db.query(findPropById, [id], (err, data) => {
+            if (err)
+                result({
+                    status: 'error',
+                    message: err.message
+                }, null)
+            else if (!data.length)
+                result({
+                    status: 'error',
+                    message: 'property not found'
+                }, null)
 
-				result(null, {
-					status: 'success',
-					data
-				})
-			})
-		})
-	}
+            result(null, {
+                status: 'sucess',
+                data
+            })
 
-	static findById(id, result) {
-		db.query('SELECT * FROM properties WHERE property_id = ?', [id], (err, data) => {
-			if(err) 
-				result({
-					status: 'error',
-					message: err.message
-				}, null)
-			else if(!data.length)
-				result({
-					status: 'error',
-					message: 'property not found'
-				}, null)
+        })
+    }
 
-			result(null, {
-				status: 'sucess',
-				data
-			})
+    static viewAll(result) {
+        db.query(viewAll, (err, data) => {
+            if (err)
+                result({
+                    status: 'error',
+                    message: err.message
+                }, null)
+            else if (!data.length)
+                result({
+                    status: 'error',
+                    message: 'data not found'
+                }, null)
 
-		})
-	}
+            result(null, {
+                status: 'sucess',
+                data
+            })
 
-	static viewAll(result) {
-		db.query('SELECT * FROM properties', (err, data) => {
-			if(err) 
-				result({
-					status: 'error',
-					message: err.message
-				}, null)
-			else if(!data.length)
-				result({
-					status: 'error',
-					message: 'data not found'
-				}, null)
+        })
+    }
 
-			result(null, {
-				status: 'sucess',
-				data
-			})
+    static findByType(type, result) {
+        db.query(findPropByType, [type], (err, data) => {
+            if (err)
+                result({
+                    status: 'error',
+                    message: 'data not found'
+                }, null)
 
-		})
-	}
-
-	static searchByType(type, result) {
-		db.query('SELECT * FROM properties WHERE type = ?', [type], (err, data) => {
-			if(err) 
-				result({
-					status: 'error',
-					message: 'data not found'
-				}, null)
-
-			result(null, {
-					status: 'success',
-					data
-				})
-		})
-	}
+            result(null, {
+                status: 'success',
+                data
+            })
+        })
+    }
 }
 
 module.exports = Property

@@ -8,15 +8,13 @@ exports.create = (req, res) => {
 		})
 	}
 
-	const { user_id, item, status, price, state, city, address, image_url, type, created_on } = req.body
-	const property = new Property(user_id, item, status, price, state, city, address, image_url, type, created_on )
+	const { item, status, price, state, city, address, image_url, type, created_on } = req.body
+	const property = new Property(req.user[0].user_id, item, status, price, state, city, address, image_url, type, created_on )
 
 	Property.create(property, (err, data) => {
-		if(err) {
-			res.send(err)
-		}
+		if(err) return res.send(err)
 
-		res.status(200).send(data)
+		return res.status(200).send(data)
 	})
 }
 
@@ -30,22 +28,41 @@ exports.update = (req, res) => {
 
 	const id = req.params.id
 
-	const {item, status, price, state, city, address, image_url, type } = req.body
+	const { item, status, price, type } = req.body
 
-	Property.update(id, item, status, price, state, city, address, image_url, type, (err, data) => {
-		if(err) res.status(400).send(err)
+	Property.update(id, item, status, price, type, (err, data) => {
+		if(err) return res.status(400).send(err)
 
-		res.send(data)
+		return res.send(data)
 	})
+}
+
+exports.updateStatus = (req, res) => {
+	if(!req.body) {
+		res.status(400).send({
+			status: 'error',
+			message: 'Please update status'
+		})
+	}
+
+	const id = req.params.id
+	const { status } = req.body
+
+	Property.updateStatus(id, status, (err, data) => {
+		if(err) return res.status(400).send(err)
+
+		return res.send(data)
+	})
+
 }
 
 exports.delete = (req, res) => {
 	const id = req.params.id 
 
 	Property.delete(id, (err, data) => {
-		if(err) res.status(404).send(err)
+		if(err) return res.status(404).send(err)
 
-		res.send(data)
+		return res.send(data)
 	})
 }
 
@@ -53,26 +70,26 @@ exports.findById = (req, res) => {
 	const id = req.params.id
 
 	Property.findById(id, (err, data) => {
-		if(err) res.status(404).send(err)
+		if(err) return res.status(404).send(err)
 
-		res.send(data)
+		return res.send(data)
 	})
 }
 
 exports.viewAll = (req, res) => {
 	Property.viewAll((err, data) => {
-		if(err) res.status(404).send(err)
+		if(err) return res.status(404).send(err)
 
-		res.send(data)
+		return res.send(data)
 	})
 }
 
-exports.searchByType = (req, res) => {
+exports.findByType = (req, res) => {
 	const type = req.query.type
 
-	Property.searchByType(type, (err, data) => {
-		if(err) res.send(err)
+	Property.findByType(type, (err, data) => {
+		if(err) return res.send(err)
 
-		res.send(data)
+		return res.send(data)
 	})
 }

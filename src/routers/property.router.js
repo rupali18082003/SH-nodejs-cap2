@@ -6,8 +6,11 @@ module.exports = app => {
 	//creating property advert
 	router.post('/create', auth, propertyController.create)
 
-	//updating property advert + mark his/her property as sold
+	//updating property 
 	router.patch('/update/:id', auth, propertyController.update)
+
+	//mark property as sold/available 
+	router.patch('/updateStatus/:id', auth, propertyController.updateStatus)
 	
 	//deleting property advert
 	router.delete('/delete/:id', auth, propertyController.delete)
@@ -19,7 +22,7 @@ module.exports = app => {
 	router.get('/viewAll', auth, propertyController.viewAll)
 
 	//search property by type
-	router.get('/search', auth, propertyController.searchByType)
+	router.get('/search', auth, propertyController.findByType)
 
 	app.use('/property', router)
 }
