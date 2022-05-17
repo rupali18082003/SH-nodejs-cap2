@@ -1,8 +1,11 @@
 const db = require('../config/db.config.js')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const  validate  = require('../validation/user.validation.js')
+const { getToken } = require('../middleware/get-jwt-token.js')
+const { findUserById, findUserByEmail, createNewUser } = require('../database/queries.js')
 
-class Signup {
+class User {
 	constructor(first_name, last_name, email, password, phone, address, is_admin) {
 		this.first_name = first_name 
 		this.last_name = last_name
@@ -14,9 +17,8 @@ class Signup {
 	}
 
 	//signing up
-	static create (newUser, result) {
-		db.query('SELECT * FROM users WHERE email = ?', [newUser.email], (err, res) => {
-			console.log('RES: ', res)
+	static signup (newUser, result) {
+		db.query(findUserByEmail, [newUser.email], (err, res) => {
 			if(res.length) {
 				result({
 					status: "error",
@@ -35,22 +37,24 @@ class Signup {
 				 		}, null)
 				 	}
 
-				 	db.query('INSERT INTO users(first_name, last_name, email, password, phone, address, is_admin) VALUES(?, ?, ?, ?, ?, ?, ?)', [newUser.first_name, newUser.last_name, newUser.email, hash, newUser.phone, newUser.address, newUser.is_admin], (err, res) => {
+				 	db.query(createNewUser, [newUser.first_name, newUser.last_name, newUser.email, hash, newUser.phone, newUser.address, newUser.is_admin], (err, res) => {
 						if(err) {
-							throw err
 							result({
 								status: "error",
 								message: 'something went wrong, can not register user.'
 							}, null)
-							return
 						}
 
-						console.log('User created: ', {...newUser})
+						const token = getToken( res.insertId )
+
 						result(null, { 
 							status: "success",
 							data: {
 								id: res.insertId, 
-								...newUser
+								token,
+								first_name: newUser.first_name,
+								last_name: newUser.last_name,
+								email: newUser.email
 							}
 						})
 					})
@@ -59,16 +63,10 @@ class Signup {
 
 		 })		
 	}
-}
 
-class Signin {
-	constructor(email, password) {
-		this.email = email
-		this.password = password
-	}
-
-	static signin(user, result) {
-		db.query('SELECT * FROM users WHERE email = ?', [user.email], (err, res) => {
+	//signing in
+	static signin ({ email, password }, result) {
+		db.query(findUserByEmail, [email], (err, res) => {
 			if(err) {
 				throw err
 				result({
@@ -83,7 +81,7 @@ class Signin {
 					message: "Invalid email or password."
 				}, null)
 			} else {
-				bcrypt.compare(user.password, res[0].password, (err, data) => {
+				bcrypt.compare(password, res[0].password, (err, data) => {
 					if (err) {
 						throw err
 						result({
@@ -93,14 +91,24 @@ class Signin {
 					}
 
 					if (data) {
-						//generating authentication token for 24 Hours
-						const token = jwt.sign({ id: res[0].id }, process.env.JWT_SECRET_KEY, {expiresIn: '24h'})
+						const token = getToken( res[0].user_id )
 
-						result(null, {
-							status: "success",
-							user,
-							token
+						db.query(findUserById, res[0].user_id, (err, user) => {
+							if(err) throw err
+
+							result(null, {
+								status: "success",
+								data: {
+									token, 
+									id: user[0].user_id,
+									first_name: user[0].first_name,
+									last_name: user[0].last_name,
+									email: user[0].email
+								}
+							})
+
 						})
+
 					} else {
 						result({
 							status: "error",
@@ -110,12 +118,7 @@ class Signin {
 				})
 			}
 		})
-
 	}
 }
 
-
-module.exports = {
-	Signup,
-	Signin
-}
+module.exports = User
