@@ -1,4 +1,4 @@
-const db = require('../config/db.config.js')
+const db = require('../configs/db.config.js')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const  validate  = require('../validation/user.validation.js')

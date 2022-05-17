@@ -1,5 +1,5 @@
 const { createTB_users, createTB_properties } = require('../queries.js')
-const db_init = require('../../config/db.config.js')
+const db_init = require('../../configs/db.config.js')
 
 const createTables = () => {
 	db_init.query(createTB_users, (err, _) => {
