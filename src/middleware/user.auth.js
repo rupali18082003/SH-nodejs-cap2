@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken')
 const { findUserById } = require('../database/queries.js')
-const db = require('../config/db.config.js')
+const db = require('../configs/db.config.js')
 
 
 const auth = async (req, res, next) => {
