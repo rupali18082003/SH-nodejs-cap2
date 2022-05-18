@@ -28,9 +28,7 @@ exports.update = (req, res) => {
 
 	const id = req.params.id
 
-	const { item, status, price, type } = req.body
-
-	Property.update(id, item, status, price, type, (err, data) => {
+	Property.update(id, req.body, (err, data) => {
 		if(err) return res.status(400).send(err)
 
 		return res.send(data)

@@ -46,7 +46,9 @@ const createNewProp = `INSERT INTO properties(user_id, item, status, price, stat
 
 const findPropById = `SELECT * FROM properties WHERE property_id = ?`
 
-const updatePropById = `UPDATE properties SET item = ?, status = ?, price = ?, type = ? WHERE property_id = ?`
+const updatePropById = `UPDATE properties SET item = ?, status = ?, price = ?, state = ?, city = ?, address = ?, image_url = ?, type = ? WHERE property_id = ? `
+
+const updateFun = (prop) => `UPDATE properties SET ${prop} = ? WHERE property_id = ?`
 
 const updatePropByStatus = `UPDATE properties SET status = ? WHERE property_id = ?`
 
@@ -67,6 +69,7 @@ module.exports = {
 	createNewProp,
 	findPropById,
 	updatePropById,
+	updateFun,
 	updatePropByStatus,
 	deletePropById,
 	viewAll,

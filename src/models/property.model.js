@@ -8,7 +8,8 @@ const {
     updatePropByStatus,
     deletePropById,
     viewAll,
-    findByType
+    findByType,
+    updateFun
 } = require('../database/queries.js')
 
 
@@ -44,7 +45,6 @@ class Property {
             }, null)
 
             db.query(findPropById, [res.insertId], (err, data) => {
-                console.log(res.insertId)
                 result(null, {
                     status: 'sucess',
                     data
@@ -54,48 +54,57 @@ class Property {
         })
     }
 
-    static update(id, item, status, price, type, result) {
-        db.query(updatePropById, [item, status, price, type, id], (err, res) => {
-            if (err) result({
+    static update(id, body, result) {    
+        db.query(findPropById, [id], (err, res) => {
+            if(err) return result({
                 status: 'error',
                 message: err.message
             }, null)
 
-            db.query(findPropById, [id], (err, data) => {
-                if (err) result({
-                    status: 'error',
-                    message: err.message
-                }, null)
+           if(!res.length)
+               return result({
+                   status: 'sucess',
+                   message: 'property not found'
+               })
 
-                if (!data.length)
-                    result({
-                        status: 'error',
-                        message: 'property not found'
-                    }, null)
+            if(body.item) 
+            db.query(updateFun('item'), [body.item, id])
+            if(body.status) 
+                db.query(updateFun('status'), [body.status, id])
+            if(body.price) 
+                db.query(updateFun('price'), [body.price, id])
+            if(body.state) 
+                db.query(updateFun('state'), [body.state, id])
+            if(body.city) 
+                db.query(updateFun('city'), [body.city, id])
+            if(body.address) 
+                db.query(updateFun('address'), [body.address, id])
+            if(body.image_url) 
+                db.query(updateFun('image_url'), [body.image_url, id])
+            if(body.type) 
+                db.query(updateFun('type'), [body.type, id])
 
-                result(null, {
-                    status: 'sucess',
-                    data
-                })
-            })
+            db.query(findPropById, [id], (err, data) => result(null, {status: 'sucess', data}))
+            
         })
+      
     }
 
     static updateStatus(id, status, result) {
         db.query(updatePropByStatus, [status, id], (err, res) => {
-            if (err) result({
+            if (err) return result({
                 status: 'error',
                 message: err.message
             }, null)
 
             db.query(findPropById, [id], (err, data) => {
-                if (err) result({
+                if (err) return result({
                     status: 'error',
                     message: err.message
                 }, null)
 
                 if (!data.length)
-                    result({
+                    return result({
                         status: 'error',
                         message: 'property not found'
                     }, null)
@@ -111,19 +120,19 @@ class Property {
 
     static delete(id, result) {
         db.query(findPropById, [id], (err, data) => {
-            if (err) result({
+            if (err) return result({
                 status: 'error',
                 message: err.message
             }, null)
 
             if (!data.length)
-                result({
+                return result({
                     status: 'error',
                     message: 'property not found'
                 }, null)
 
             db.query(deletePropById, [id], (err, res) => {
-                if (err) result({
+                if (err) return result({
                     status: 'error',
                     message: err.message
                 }, null)
@@ -140,12 +149,12 @@ class Property {
     static findById(id, result) {
         db.query(findPropById, [id], (err, data) => {
             if (err)
-                result({
+                return result({
                     status: 'error',
                     message: err.message
                 }, null)
             else if (!data.length)
-                result({
+                return result({
                     status: 'error',
                     message: 'property not found'
                 }, null)
@@ -161,12 +170,12 @@ class Property {
     static viewAll(result) {
         db.query(viewAll, (err, data) => {
             if (err)
-                result({
+                return result({
                     status: 'error',
                     message: err.message
                 }, null)
             else if (!data.length)
-                result({
+                return result({
                     status: 'error',
                     message: 'data not found'
                 }, null)
@@ -182,7 +191,7 @@ class Property {
     static findByType(type, result) {
         db.query(findPropByType, [type], (err, data) => {
             if (err)
-                result({
+                return result({
                     status: 'error',
                     message: 'data not found'
                 }, null)
