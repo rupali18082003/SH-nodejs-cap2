@@ -1,10 +1,11 @@
 const db = require('../configs/db.config.js')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const { error, success } = require('../status/status.js')
 const {
     createNewProp,
     findPropById,
-    updatePropById,
+    postReport,
     updatePropByStatus,
     deletePropById,
     viewAll,
@@ -39,16 +40,10 @@ class Property {
             newProp.image_url,
             newProp.type,
         ], (err, res) => {
-            if (err) result({
-                status: 'error',
-                message: err.message
-            }, null)
+            if (err) result(error(err.message), null)
 
             db.query(findPropById, [res.insertId], (err, data) => {
-                result(null, {
-                    status: 'sucess',
-                    data
-                })
+                result(null, success({...data[0]}))
             })
 
         })
@@ -56,16 +51,10 @@ class Property {
 
     static update(id, body, result) {    
         db.query(findPropById, [id], (err, res) => {
-            if(err) return result({
-                status: 'error',
-                message: err.message
-            }, null)
+            if(err) return result(error(err.message), null)
 
            if(!res.length)
-               return result({
-                   status: 'sucess',
-                   message: 'property not found'
-               })
+               return result(error('property not found'), null)
 
             if(body.item) 
             db.query(updateFun('item'), [body.item, id])
@@ -84,7 +73,7 @@ class Property {
             if(body.type) 
                 db.query(updateFun('type'), [body.type, id])
 
-            db.query(findPropById, [id], (err, data) => result(null, {status: 'sucess', data}))
+            db.query(findPropById, [id], (err, data) => result(null, success({...data[0]})))
             
         })
       
@@ -92,27 +81,15 @@ class Property {
 
     static updateStatus(id, status, result) {
         db.query(updatePropByStatus, [status, id], (err, res) => {
-            if (err) return result({
-                status: 'error',
-                message: err.message
-            }, null)
+            if (err) return result(error(err.message), null)
 
             db.query(findPropById, [id], (err, data) => {
-                if (err) return result({
-                    status: 'error',
-                    message: err.message
-                }, null)
+                if (err) return result(error(err.message), null)
 
                 if (!data.length)
-                    return result({
-                        status: 'error',
-                        message: 'property not found'
-                    }, null)
+                    return result(error('property not found'), null)
 
-                result(null, {
-                    status: 'success',
-                    data
-                })
+                result(null, success({...data[0]}))
 
             })
         })
@@ -120,28 +97,16 @@ class Property {
 
     static delete(id, result) {
         db.query(findPropById, [id], (err, data) => {
-            if (err) return result({
-                status: 'error',
-                message: err.message
-            }, null)
+            if (err) return result(error(err.message), null)
 
             if (!data.length)
-                return result({
-                    status: 'error',
-                    message: 'property not found'
-                }, null)
+                return result(error('property not found'), null)
 
             db.query(deletePropById, [id], (err, res) => {
-                if (err) return result({
-                    status: 'error',
-                    message: err.message
-                }, null)
+                if (err) return result(error(err.message), null)
 
 
-                result(null, {
-                    status: 'success',
-                    data
-                })
+                result(null, success({...data[0]}))
             })
         })
     }
@@ -149,20 +114,11 @@ class Property {
     static findById(id, result) {
         db.query(findPropById, [id], (err, data) => {
             if (err)
-                return result({
-                    status: 'error',
-                    message: err.message
-                }, null)
+                return result(error(err.message), null)
             else if (!data.length)
-                return result({
-                    status: 'error',
-                    message: 'property not found'
-                }, null)
+                return result(error('property not found'), null)
 
-            result(null, {
-                status: 'sucess',
-                data
-            })
+            result(null, success({...data[0]}))
 
         })
     }
@@ -170,20 +126,11 @@ class Property {
     static viewAll(result) {
         db.query(viewAll, (err, data) => {
             if (err)
-                return result({
-                    status: 'error',
-                    message: err.message
-                }, null)
+                return result(error(err.message), null)
             else if (!data.length)
-                return result({
-                    status: 'error',
-                    message: 'data not found'
-                }, null)
+                return result(error('property not found'), null)
 
-            result(null, {
-                status: 'sucess',
-                data
-            })
+            result(null, success({...data[0]}))
 
         })
     }
@@ -191,15 +138,22 @@ class Property {
     static findByType(type, result) {
         db.query(findPropByType, [type], (err, data) => {
             if (err)
-                return result({
-                    status: 'error',
-                    message: 'data not found'
-                }, null)
+                return result(error('property not found'), null)
 
-            result(null, {
-                status: 'success',
-                data
-            })
+            result(null, success({...data[0]}))
+        })
+    }
+
+    static report (reqBody, result) {
+        db.query(postReport, [null, reqBody.property_id, null, reqBody.reason, reqBody.description], (err, res) => {
+            if (err)
+                return result(error('property not found'), null)
+
+            return result(null, success({
+                report_id: res.insertId,
+                property_id: reqBody.property_id,
+                reason: reqBody.reason
+            }))
         })
     }
 }
