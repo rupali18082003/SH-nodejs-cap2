@@ -1,11 +1,9 @@
 const Property  = require('../models/property.model.js')
+const { error } = require('../status/status.js')
 
 exports.create = (req, res) => {
 	if(!req.body){
-		res.status(400).send({
-			status: 'error',
-			message: 'Body can not be empty'
-		})
+		res.status(400).send(error('body can not be empty'))
 	}
 
 	const { item, status, price, state, city, address, image_url, type, created_on } = req.body
@@ -20,10 +18,7 @@ exports.create = (req, res) => {
 
 exports.update = (req, res) => {
 	if(!req.body) {
-		res.status(400).send({
-			status: 'error',
-			message: 'Body can not be empty'
-		})
+		res.status(400).send(error('body can not be empty'))
 	}
 
 	const id = req.params.id
@@ -37,10 +32,7 @@ exports.update = (req, res) => {
 
 exports.updateStatus = (req, res) => {
 	if(!req.body) {
-		res.status(400).send({
-			status: 'error',
-			message: 'Please update status'
-		})
+		res.status(400).send(error('please update status'))
 	}
 
 	const id = req.params.id
@@ -90,4 +82,15 @@ exports.findByType = (req, res) => {
 
 		return res.send(data)
 	})
+}
+
+exports.report = (req, res) => {
+	if(!req.body) 
+		res.status(400).send(error('body can not be empty'))
+
+	Property.report(req.body, (err, data) => {
+		if(err) return res.send(err)
+
+		return res.send(data)
+	})	
 }

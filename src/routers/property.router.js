@@ -24,5 +24,8 @@ module.exports = app => {
 	//search property by type
 	router.get('/search', auth, propertyController.findByType)
 
+	//report property
+	router.post('/report', auth, propertyController.report)
+
 	app.use('/property', router)
 }

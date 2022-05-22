@@ -9,5 +9,8 @@ module.exports = app => {
 	//signing in user
 	router.post('/signin', signinValidation, userController.signin)
 
+	//reset password
+	router.patch('/resetPassword', userController.resetPassword)
+
 	app.use('/auth', router)
 }

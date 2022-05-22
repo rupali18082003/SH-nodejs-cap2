@@ -10,6 +10,7 @@ const findUserByEmail = `SELECT * FROM users WHERE email = ?`
 
 const createNewUser = `INSERT INTO users(first_name, last_name, email, password, phone, address, is_admin) VALUES(?, ?, ?, ?, ?, ?, ?)`
 
+const resetPswd = `UPDATE users SET password = ? WHERE email = ?`
 
 //property
 const createTB_users = `
@@ -42,11 +43,22 @@ const createTB_properties = `
 	)
 `
 
+const createTB_reports = `
+	CREATE TABLE IF NOT EXISTS reports (
+	report_id INT NOT NULL AUTO_INCREMENT,
+	property_id INT NOT NULL,
+	created_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	reason VARCHAR(70) NOT NULL,
+	description VARCHAR(255),
+	PRIMARY KEY(id)
+	)
+`
+
 const createNewProp = `INSERT INTO properties(user_id, item, status, price, state, city, address, image_url, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 const findPropById = `SELECT * FROM properties WHERE property_id = ?`
 
-const updatePropById = `UPDATE properties SET item = ?, status = ?, price = ?, state = ?, city = ?, address = ?, image_url = ?, type = ? WHERE property_id = ? `
+const postReport = `INSERT INTO reports VALUES(?,?,?,?,?)`
 
 const updateFun = (prop) => `UPDATE properties SET ${prop} = ? WHERE property_id = ?`
 
@@ -66,12 +78,14 @@ module.exports = {
 	createNewUser,
 	createTB_users,
 	createTB_properties,
+	createTB_reports,
 	createNewProp,
 	findPropById,
-	updatePropById,
+	postReport,
 	updateFun,
 	updatePropByStatus,
 	deletePropById,
 	viewAll,
-	findByType
+	findByType,
+	resetPswd
 }
